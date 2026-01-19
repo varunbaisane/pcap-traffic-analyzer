@@ -21,6 +21,7 @@ This project demonstrates practical network security and detection skills by ins
 ## How to Run
 ```bash
 pip install -r requirements.txt
+#Save your pcap file as samples/sample.pcap
 python analyzer.py
 ```
 
