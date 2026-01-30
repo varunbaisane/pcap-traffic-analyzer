@@ -1,6 +1,6 @@
 import json
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 
 from utils.pcap_loader import load_pcap
 from detectors.portscan import detect_port_scan
@@ -12,7 +12,11 @@ def enrich_alerts(alerts, prefix):
     enriched = []
     for index, alert in enumerate(alerts, start=1):
         alert["alert_id"] = f"{prefix}-{index:03d}"
-        alert["timestamp_utc"] = datetime.utcnow().isoformat() + "Z"
+        alert["timestamp"] = {
+            "utc": datetime.now(timezone.utc).isoformat(),
+            "date": datetime.now(timezone.utc).date().isoformat(),
+            "time": datetime.now(timezone.utc).time().replace(microsecond=0).isoformat()
+        }
         enriched.append(alert)
     return enriched
 

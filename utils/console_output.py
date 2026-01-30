@@ -4,7 +4,11 @@ def print_alert(alert):
     print(f"  Destination IP   : {alert.get('destination_ip')}")
     print(f"  Protocol         : {alert.get('protocol')}")
     print(f"  Analyzer         : {alert.get('analyzer')}")
-    print(f"  Timestamp (UTC)  : {alert.get('timestamp_utc')}")
+    timestamp = alert.get("timestamp", {})
+    print(
+        f"  Timestamp (UTC)  : {timestamp.get('date')} "
+        f"{timestamp.get('time')}"
+    )
 
     metric = alert.get("metric", {})
     if metric:
