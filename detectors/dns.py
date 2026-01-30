@@ -1,20 +1,32 @@
 from collections import defaultdict
 
 def detect_dns_anomaly(packets, threshold=50):
-    dns_count = defaultdict(int)
+    dns_data = defaultdict(lambda: {
+        "packet_count": 0,
+        "destination_ip": None
+    })
 
     for pkt in packets:
         if pkt.haslayer("DNS") and pkt.haslayer("IP"):
             src = pkt["IP"].src
-            dns_count[src] += 1
+            dst = pkt["IP"].dst
+
+            dns_data[src]["packet_count"] += 1
+            dns_data[src]["destination_ip"] = dst
 
     alerts = []
-    for src, count in dns_count.items():
-        if count >= threshold:
+    for src, data in dns_data.items():
+        if data["packet_count"] >= threshold:
             alerts.append({
-                "type": "DNS Anomaly Scan",
+                "alert_type": "DNS Anomaly",
                 "source_ip": src,
-                "query_count": count
+                "destination_ip": data["destination_ip"],
+                "protocol": "UDP",
+                "analyzer": "dns_anomaly_detector",
+                "metric": {
+                    "dns_query_count": data["packet_count"],
+                    "packet_count": data["packet_count"]
+                }
             })
 
     return alerts
