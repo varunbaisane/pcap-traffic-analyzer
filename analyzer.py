@@ -6,7 +6,7 @@ from utils.pcap_loader import load_pcap
 from detectors.portscan import detect_port_scan
 from detectors.dns import detect_dns_anomaly
 from detectors.icmp import detect_icmp_abuse
-
+from utils.console_output import print_alerts
 
 def enrich_alerts(alerts, prefix):
     enriched = []
@@ -41,6 +41,7 @@ def main():
     print(f"[+] Analysis complete. {len(alerts)} alerts generated.")
     print("[+] Results saved to output/alerts.json")
 
+    print_alerts(alerts)
 
 if __name__ == "__main__":
     main()
