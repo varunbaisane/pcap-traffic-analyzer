@@ -17,6 +17,13 @@ def print_alert(alert):
             pretty_key = key.replace("_", " ").title()
             print(f"    - {pretty_key}: {value}")
 
+    mitre = alert.get("mitre_attack")
+    if mitre:
+        print("  MITRE ATT&CK:")
+        print(f"    - Tactic        : {mitre.get('tactic')}")
+        print(f"    - Technique     : {mitre.get('technique_id')} "
+            f"({mitre.get('technique_name')})")
+
     print("-" * 60)
 
 

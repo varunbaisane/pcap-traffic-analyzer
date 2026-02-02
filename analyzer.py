@@ -7,6 +7,7 @@ from detectors.portscan import detect_port_scan
 from detectors.dns import detect_dns_anomaly
 from detectors.icmp import detect_icmp_abuse
 from utils.console_output import print_alerts
+from utils.mitre_mapping import enrich_with_mitre
 
 def enrich_alerts(alerts, prefix):
     enriched = []
@@ -17,6 +18,7 @@ def enrich_alerts(alerts, prefix):
             "date": datetime.now(timezone.utc).date().isoformat(),
             "time": datetime.now(timezone.utc).time().replace(microsecond=0).isoformat()
         }
+        alert = enrich_with_mitre(alert)
         enriched.append(alert)
     return enriched
 
