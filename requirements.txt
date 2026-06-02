@@ -1,2 +1,7 @@
 scapy
 
+# Required for --llm enrichment mode
+google-genai>=1.0.0
+
+# Loads .env file automatically at startup
+python-dotenv>=1.0.0
