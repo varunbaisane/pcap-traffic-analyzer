@@ -1,6 +1,16 @@
 # PCAP Traffic Analyzer
 
-A Python-based network forensics tool that analyses PCAP files and detects suspicious network activity — including port scanning, DNS anomalies, and ICMP flooding.
+![Python](https://img.shields.io/badge/python-3.x-blue)
+![Status](https://img.shields.io/badge/status-active-brightgreen)
+![Interface](https://img.shields.io/badge/interface-CLI-orange)
+![Category](https://img.shields.io/badge/category-security--tool-limegreen)
+![Domain](https://img.shields.io/badge/domain-network--security-blue)
+![Focus](https://img.shields.io/badge/focus-threat--detection-blue)
+![MITRE ATT&CK](https://img.shields.io/badge/MITRE-ATT%26CK-darkred)
+![LLM](https://img.shields.io/badge/LLM-Gemini%20%7C%20OpenAI-green)
+
+
+A Python-based network forensics tool that analyses PCAP files and detects suspicious network activity including port scanning, DNS anomalies, and ICMP flooding.
 
 The tool produces **structured SOC-style alerts** in JSON format with optional **LLM-powered enrichment** via Google Gemini.
 
@@ -53,7 +63,7 @@ cp .env.example .env
 `.env` file:
 
 ```
-GEMINI_API_KEY=your_google_ai_studio_key_here
+GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-2.5-flash   # optional, this is the default
 ```
 
@@ -75,7 +85,7 @@ python analyzer.py --pcap samples/sample.pcap
 python analyzer.py --pcap samples/sample.pcap --llm
 ```
 
-The `--llm` flag is fully optional. Without it, the tool behaves exactly as before — no API calls are made and no API key is required.
+The `--llm` flag is fully optional. Without it, the tool behaves exactly as before, no API calls are made and no API key is required.
 
 ### Generate a sample PCAP
 
