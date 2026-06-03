@@ -116,8 +116,8 @@ Results are written to `output/alerts.json`.
   "alert_id": "PS-001",
   "timestamp": {
     "utc": "2026-03-08T14:12:11+00:00",
-    "date": "2026-03-08",
-    "time": "14:12:11"
+    "local": "2026-03-08T19:42:11+05:30",
+    "timezone": "Asia/Kolkata"
   },
   "mitre_attack": {
     "tactic": "Discovery",
@@ -163,7 +163,8 @@ The `llm_enrichment` block is appended to each alert:
   Destination IP   : 192.168.1.20
   Protocol         : TCP
   Analyzer         : portscan_detector
-  Timestamp (UTC)  : 2026-03-08 14:12:11
+  Timestamp (UTC)  : 2026-03-08 14:12:11 UTC
+  Timestamp (Local): 2026-03-08 19:42:11 Asia/Kolkata
   Metrics:
     - Ports Scanned: 30
     - Packet Count: 30

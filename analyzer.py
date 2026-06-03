@@ -1,6 +1,8 @@
 import json
 import logging
 import argparse
+import os
+import pathlib
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
@@ -21,9 +23,44 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _get_local_timezone_name() -> str:
+    """
+    Detect the IANA timezone name of the host system.
+
+    Uses a cascade of OS-level strategies to maximise portability:
+    1. /etc/localtime symlink target (Linux/macOS)
+    2. /etc/timezone file contents (Debian/Ubuntu)
+    3. TZ environment variable
+    4. Falls back to the abbreviation from the OS (e.g. "IST", "EST")
+
+    Returns:
+        A timezone identifier such as "Asia/Kolkata" or "EST".
+    """
+    localtime = pathlib.Path("/etc/localtime")
+    if localtime.is_symlink():
+        target = str(localtime.resolve())
+        if "zoneinfo/" in target:
+            return target.split("zoneinfo/")[-1]
+
+    tz_file = pathlib.Path("/etc/timezone")
+    if tz_file.exists():
+        name = tz_file.read_text().strip()
+        if name:
+            return name
+
+    tz_env = os.environ.get("TZ")
+    if tz_env:
+        return tz_env
+
+    return datetime.now().astimezone().tzname() or "UTC"
+
+
 def _enrich_with_metadata(alerts: list[dict], prefix: str) -> list[dict]:
     """
-    Attach alert IDs, UTC timestamps, and MITRE mappings to a list of alerts.
+    Attach alert IDs, timestamps, and MITRE mappings to a list of alerts.
+
+    Timestamps include both UTC and local representations with the host
+    system's IANA timezone identifier for unambiguous interpretation.
 
     Args:
         alerts: Raw alert dicts as produced by a detector.
@@ -33,14 +70,16 @@ def _enrich_with_metadata(alerts: list[dict], prefix: str) -> list[dict]:
         The same list with `alert_id`, `timestamp`, and `mitre_attack` added
         to each entry.
     """
+    tz_name = _get_local_timezone_name()
     enriched: list[dict] = []
     for index, alert in enumerate(alerts, start=1):
         alert["alert_id"] = f"{prefix}-{index:03d}"
-        now = datetime.now(timezone.utc)
+        now_utc = datetime.now(timezone.utc).replace(microsecond=0)
+        now_local = now_utc.astimezone()
         alert["timestamp"] = {
-            "utc": now.isoformat(),
-            "date": now.date().isoformat(),
-            "time": now.time().replace(microsecond=0).isoformat(),
+            "utc": now_utc.isoformat(),
+            "local": now_local.isoformat(),
+            "timezone": tz_name,
         }
         alert = enrich_with_mitre(alert)
         enriched.append(alert)

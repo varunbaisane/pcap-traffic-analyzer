@@ -15,10 +15,15 @@ def print_alert(alert: dict) -> None:
     print(f"  Analyzer         : {alert.get('analyzer')}")
 
     timestamp = alert.get("timestamp", {})
-    print(
-        f"  Timestamp (UTC)  : {timestamp.get('date')} "
-        f"{timestamp.get('time')}"
-    )
+    utc_raw = timestamp.get("utc", "")
+    local_raw = timestamp.get("local", "")
+    utc_display = utc_raw.replace("T", " ").split("+")[0] if utc_raw else "N/A"
+    local_display = local_raw.replace("T", " ").split("+")[0] if local_raw else "N/A"
+    local_offset = ""
+    if local_raw and "+" in local_raw:
+        local_offset = "+" + local_raw.split("+")[-1]
+    print(f"  Timestamp (UTC)  : {utc_display} UTC")
+    print(f"  Timestamp (Local): {local_display} {timestamp.get('timezone', '')}")
 
     metric = alert.get("metric", {})
     if metric:
