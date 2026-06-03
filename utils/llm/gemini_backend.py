@@ -1,9 +1,4 @@
-"""
-Google Gemini backend implementation for LLM-based alert enrichment.
-
-Reads GEMINI_API_KEY and GEMINI_MODEL from environment variables.
-All Gemini-specific logic is fully contained within this file.
-"""
+"""Google Gemini backend for LLM-based alert enrichment."""
 
 import json
 import logging
@@ -26,13 +21,8 @@ class GeminiBackend(LLMBackend):
     """
     LLM backend powered by the Google Gemini API.
 
-    Configuration (via environment variables):
-        GEMINI_API_KEY  — Required. Your Google AI Studio or Vertex API key.
-        GEMINI_MODEL    — Optional. Model identifier (default: gemini-2.5-flash).
-
-    The client is initialised once at construction time. If the API key is
-    absent, an EnvironmentError is raised immediately so the caller can
-    surface a clear message before attempting any enrichment.
+    Reads GEMINI_API_KEY (required) and GEMINI_MODEL (optional,
+    default: gemini-2.5-flash) from environment variables.
     """
 
     def __init__(self) -> None:
@@ -54,24 +44,10 @@ class GeminiBackend(LLMBackend):
 
     def enrich(self, alert: dict) -> dict:
         """
-        Call the Google Gemini API and return enrichment data.
+        Call the Gemini API and return structured enrichment data.
 
-        The system prompt is passed via GenerateContentConfig.system_instruction.
-        The user prompt is sent as the primary content. JSON output mode is
-        requested explicitly to guarantee parseable responses.
-
-        Args:
-            alert: A fully-formed alert dictionary.
-
-        Returns:
-            A dict conforming to the `llm_enrichment` schema.
-
-        Raises:
-            EnvironmentError: If the API key is missing (raised at init).
-            ValueError: If the model returns a response that cannot be parsed
-                        or is missing required fields.
-            Exception: Any google.genai API error is allowed to propagate so
-                       the enricher orchestration layer can log and continue.
+        Uses ``system_instruction`` and ``response_mime_type=application/json``
+        to guarantee a parseable JSON response.
         """
         prompts = build_prompt(alert)
 
@@ -95,19 +71,7 @@ class GeminiBackend(LLMBackend):
         return enrichment
 
     def _parse_and_validate(self, raw: str) -> dict:
-        """
-        Parse the model's JSON response and validate required fields.
-
-        Args:
-            raw: The raw string content returned by the model.
-
-        Returns:
-            A validated enrichment dict (without meta fields yet).
-
-        Raises:
-            ValueError: If the content is not valid JSON, is missing required
-                        fields, or has an incorrect field type.
-        """
+        """Parse and validate the model's JSON response against the required schema."""
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as exc:

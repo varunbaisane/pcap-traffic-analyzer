@@ -1,13 +1,5 @@
 def print_alert(alert: dict) -> None:
-    """
-    Print a single alert to stdout in human-readable format.
-
-    Displays core fields, metrics, MITRE ATT&CK mapping, and LLM enrichment
-    data when present.
-
-    Args:
-        alert: A fully-formed alert dictionary.
-    """
+    """Print a single alert to stdout in human-readable format."""
     print(f"[ALERT] {alert.get('alert_type')}  ({alert.get('alert_id')})")
     print(f"  Source IP        : {alert.get('source_ip')}")
     print(f"  Destination IP   : {alert.get('destination_ip')}")
@@ -19,9 +11,6 @@ def print_alert(alert: dict) -> None:
     local_raw = timestamp.get("local", "")
     utc_display = utc_raw.replace("T", " ").split("+")[0] if utc_raw else "N/A"
     local_display = local_raw.replace("T", " ").split("+")[0] if local_raw else "N/A"
-    local_offset = ""
-    if local_raw and "+" in local_raw:
-        local_offset = "+" + local_raw.split("+")[-1]
     print(f"  Timestamp (UTC)  : {utc_display} UTC")
     print(f"  Timestamp (Local): {local_display} {timestamp.get('timezone', '')}")
 
@@ -62,12 +51,7 @@ def print_alert(alert: dict) -> None:
 
 
 def print_alerts(alerts: list[dict]) -> None:
-    """
-    Print all alerts to stdout.
-
-    Args:
-        alerts: A list of alert dictionaries to display.
-    """
+    """Print all alerts to stdout."""
     if not alerts:
         print("[+] No suspicious activity detected.")
         return

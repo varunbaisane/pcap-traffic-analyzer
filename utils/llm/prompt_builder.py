@@ -1,10 +1,4 @@
-"""
-Prompt construction for LLM-based alert enrichment.
-
-This module is entirely backend-agnostic. It produces plain Python dicts
-containing `system` and `user` prompt strings. No SDK types or provider
-libraries are imported here.
-"""
+"""Backend-agnostic prompt construction for LLM alert enrichment."""
 
 import json
 
@@ -72,23 +66,7 @@ Per-field rules:
 
 
 def build_prompt(alert: dict) -> dict[str, str]:
-    """
-    Construct the system and user prompts for a given alert.
-
-    The user prompt embeds the full alert payload (including MITRE mapping)
-    and explicitly reiterates the required output schema so the model has
-    unambiguous instructions regardless of context window length.
-
-    Args:
-        alert: A fully-formed alert dictionary. Keys used:
-               `alert_type`, `source_ip`, `destination_ip`, `protocol`,
-               `metric`, `mitre_attack`.
-
-    Returns:
-        A dict with two keys:
-        - "system": the system-role prompt string.
-        - "user": the user-role prompt string containing alert details.
-    """
+    """Build system and user prompt dicts for a given alert."""
     mitre = alert.get("mitre_attack", {})
     metric = alert.get("metric", {})
 

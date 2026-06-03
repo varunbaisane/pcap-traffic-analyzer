@@ -25,16 +25,10 @@ logger = logging.getLogger(__name__)
 
 def _get_local_timezone_name() -> str:
     """
-    Detect the IANA timezone name of the host system.
+    Return the IANA timezone name of the host system.
 
-    Uses a cascade of OS-level strategies to maximise portability:
-    1. /etc/localtime symlink target (Linux/macOS)
-    2. /etc/timezone file contents (Debian/Ubuntu)
-    3. TZ environment variable
-    4. Falls back to the abbreviation from the OS (e.g. "IST", "EST")
-
-    Returns:
-        A timezone identifier such as "Asia/Kolkata" or "EST".
+    Cascades through /etc/localtime symlink, /etc/timezone, the TZ env var,
+    and finally datetime.tzname() as a fallback.
     """
     localtime = pathlib.Path("/etc/localtime")
     if localtime.is_symlink():
@@ -56,20 +50,7 @@ def _get_local_timezone_name() -> str:
 
 
 def _enrich_with_metadata(alerts: list[dict], prefix: str) -> list[dict]:
-    """
-    Attach alert IDs, timestamps, and MITRE mappings to a list of alerts.
-
-    Timestamps include both UTC and local representations with the host
-    system's IANA timezone identifier for unambiguous interpretation.
-
-    Args:
-        alerts: Raw alert dicts as produced by a detector.
-        prefix: Short prefix string for the alert ID (e.g. "PS", "DNS").
-
-    Returns:
-        The same list with `alert_id`, `timestamp`, and `mitre_attack` added
-        to each entry.
-    """
+    """Attach alert ID, UTC+local timestamps, and MITRE mapping to each alert."""
     tz_name = _get_local_timezone_name()
     enriched: list[dict] = []
     for index, alert in enumerate(alerts, start=1):
@@ -87,12 +68,7 @@ def _enrich_with_metadata(alerts: list[dict], prefix: str) -> list[dict]:
 
 
 def _build_argument_parser() -> argparse.ArgumentParser:
-    """
-    Construct and return the CLI argument parser.
-
-    Returns:
-        A configured ArgumentParser instance.
-    """
+    """Build and return the CLI argument parser."""
     parser = argparse.ArgumentParser(
         description="PCAP Traffic Analyzer – Core Detection Engine"
     )
@@ -114,12 +90,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    """
-    Entry point for the PCAP Traffic Analyzer.
-
-    Parses CLI arguments, loads the PCAP file, runs all detectors,
-    optionally performs LLM enrichment, and writes results to disk.
-    """
+    """Entry point: parse PCAP, run detectors, optionally enrich, write output."""
     parser = _build_argument_parser()
     args = parser.parse_args()
 

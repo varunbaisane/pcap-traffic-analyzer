@@ -1,11 +1,4 @@
-"""
-Orchestration layer for LLM-based alert enrichment.
-
-This module is responsible for attaching enrichment data to alerts.
-It accepts any LLMBackend implementation via dependency injection and
-degrades gracefully if enrichment fails, ensuring alert generation
-always continues uninterrupted.
-"""
+"""Orchestration layer for LLM-based alert enrichment."""
 
 from copy import deepcopy
 import logging
@@ -18,21 +11,10 @@ logger = logging.getLogger(__name__)
 
 def enrich_alert(alert: dict, backend: LLMBackend) -> dict:
     """
-    Attach LLM enrichment to a single alert.
+    Enrich a single alert, attaching ``llm_enrichment`` regardless of outcome.
 
-    Always attaches an `llm_enrichment` key regardless of outcome:
-    - On success: the enrichment dict with an added ``status: "success"`` field.
-    - On failure: ``{"status": "failed", "error": "<short message>"}``.
-
-    Detection data is never modified. Alert generation is never interrupted
-    by enrichment failures.
-
-    Args:
-        alert: A fully-formed alert dictionary.
-        backend: A concrete LLMBackend instance to use for enrichment.
-
-    Returns:
-        The alert dict with an `llm_enrichment` key always present.
+    Detection data is never modified. Failures attach ``{status: failed}``
+    rather than interrupting the pipeline.
     """
     alert_id = alert.get("alert_id", "unknown")
     alert_type = alert.get("alert_type", "unknown")
@@ -61,20 +43,7 @@ def enrich_alert(alert: dict, backend: LLMBackend) -> dict:
 
 
 def enrich_alerts(alerts: Sequence[dict], backend: LLMBackend) -> list[dict]:
-    """
-    Attach LLM enrichment to each alert in a collection.
-
-    Processes alerts sequentially. Individual failures do not stop
-    processing of remaining alerts. Every alert will contain an
-    `llm_enrichment` key on return.
-
-    Args:
-        alerts: A sequence of fully-formed alert dictionaries.
-        backend: A concrete LLMBackend instance to use for enrichment.
-
-    Returns:
-        A list of alert dicts, each with `llm_enrichment` always present.
-    """
+    """Enrich each alert in a collection, processing sequentially."""
     enriched: list[dict] = []
     for alert in alerts:
         enriched.append(enrich_alert(alert, backend))
