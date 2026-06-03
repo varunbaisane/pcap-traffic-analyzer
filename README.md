@@ -7,7 +7,7 @@
 ![Domain](https://img.shields.io/badge/domain-network--security-blue)
 ![Focus](https://img.shields.io/badge/focus-threat--detection-blue)
 ![MITRE ATT&CK](https://img.shields.io/badge/MITRE-ATT%26CK-darkred)
-![LLM](https://img.shields.io/badge/LLM-Gemini%20%7C%20OpenAI-green)
+![License](https://img.shields.io/badge/LICENSE-Apache%202.0-yellow)
 
 
 A Python-based network forensics tool that analyses PCAP files and detects suspicious network activity including port scanning, DNS anomalies, and ICMP flooding.
