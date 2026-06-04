@@ -2,7 +2,13 @@
 
 Synthetic PCAP files for validating detection logic, boundary conditions, and false-positive behaviour.
 
-All files are generated using Scapy. No real network traffic is included.
+PCAP files are excluded from version control. Run the generator to recreate the full dataset:
+
+```bash
+python samples/generate_samples.py
+```
+
+All files are produced deterministically by `generate_samples.py`. Repeated runs produce identical output.
 
 ---
 
@@ -82,7 +88,6 @@ Three source IPs, each producing traffic exactly one unit below its detector's t
 
 Expected result: zero alerts. Validates that every threshold boundary is exclusive on the lower side,
 confirming no off-by-one errors in any detector.
-
 
 ---
 

@@ -87,11 +87,20 @@ python analyzer.py --pcap samples/sample.pcap --llm
 
 The `--llm` flag is fully optional. Without it, the tool behaves exactly as before, no API calls are made and no API key is required.
 
-### Generate a sample PCAP
+### Synthetic Dataset
+
+PCAP files are not committed to the repository. Generate the full validation dataset with:
+
+```bash
+python samples/generate_samples.py
+```
+
+This produces 9 deterministic synthetic PCAPs covering boundary conditions, high-volume detection, mixed attacks, and benign traffic. See [`samples/README.md`](samples/README.md) for the full inventory.
+
+To generate only the basic quick-start sample used in the examples above:
 
 ```bash
 python samples/generate_pcap.py
-python analyzer.py --pcap samples/sample.pcap
 ```
 
 ---
