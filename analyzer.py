@@ -89,17 +89,22 @@ def _build_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def run_detection(packets) -> list[dict]:
+    """Run all detectors and return enriched alerts."""
+    alerts: list[dict] = []
+    alerts.extend(_enrich_with_metadata(detect_port_scan(packets), "PS"))
+    alerts.extend(_enrich_with_metadata(detect_dns_anomaly(packets), "DNS"))
+    alerts.extend(_enrich_with_metadata(detect_icmp_abuse(packets), "ICMP"))
+    return alerts
+
+
 def main() -> None:
     """Entry point: parse PCAP, run detectors, optionally enrich, write output."""
     parser = _build_argument_parser()
     args = parser.parse_args()
 
     packets = load_pcap(args.pcap)
-
-    alerts: list[dict] = []
-    alerts.extend(_enrich_with_metadata(detect_port_scan(packets), "PS"))
-    alerts.extend(_enrich_with_metadata(detect_dns_anomaly(packets), "DNS"))
-    alerts.extend(_enrich_with_metadata(detect_icmp_abuse(packets), "ICMP"))
+    alerts = run_detection(packets)
 
     if args.llm:
         from utils.llm.enricher import enrich_alerts as llm_enrich_alerts
