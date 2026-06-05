@@ -15,9 +15,13 @@ BENIGN_SRC_A = "10.0.0.50"
 BENIGN_SRC_B = "10.0.0.51"
 BENIGN_SRC_C = "10.0.0.52"
 
-PORT_SCAN_THRESHOLD = 20
-DNS_THRESHOLD       = 50
-ICMP_THRESHOLD      = 100
+PORT_SCAN_THRESHOLD  = 20
+DNS_THRESHOLD        = 50
+ICMP_THRESHOLD       = 100
+BRUTE_FORCE_THRESHOLD = 10
+
+BF_SRC = "10.0.1.10"
+BF_DST = "10.0.1.20"
 
 BASE_TIME = 1_700_000_000.0
 
@@ -50,6 +54,13 @@ def dns_packets(src, dst, count, duration=60.0, base=BASE_TIME):
 def icmp_packets(src, dst, count, duration=30.0, base=BASE_TIME):
     return timed_packets(
         lambda i: IP(src=src, dst=dst) / ICMP(),
+        count, duration, base,
+    )
+
+
+def bf_syn_packets(src, dst, port, count, duration=30.0, base=BASE_TIME):
+    return timed_packets(
+        lambda i: IP(src=src, dst=dst) / TCP(dport=port, flags="S"),
         count, duration, base,
     )
 
@@ -92,6 +103,22 @@ def main():
          syn_packets(BENIGN_SRC_A, SCAN_DST, PORT_SCAN_THRESHOLD - 1) +
          dns_packets(BENIGN_SRC_B, DNS_DST, DNS_THRESHOLD - 1) +
          icmp_packets(BENIGN_SRC_C, ICMP_DST, ICMP_THRESHOLD - 1))
+
+    save("bruteforce_threshold.pcap",
+         bf_syn_packets(BF_SRC, BF_DST, 22, BRUTE_FORCE_THRESHOLD))
+
+    save("bruteforce_high_volume.pcap",
+         bf_syn_packets(BF_SRC, BF_DST, 22, 25))
+
+    save("bruteforce_below_threshold.pcap",
+         bf_syn_packets(BF_SRC, BF_DST, 22, BRUTE_FORCE_THRESHOLD - 1))
+
+    save("bruteforce_cross_service.pcap",
+         bf_syn_packets(BF_SRC, BF_DST, 22, 5) +
+         bf_syn_packets(BF_SRC, BF_DST, 21, 5))
+
+    save("bruteforce_outside_window.pcap",
+         bf_syn_packets(BF_SRC, BF_DST, 22, BRUTE_FORCE_THRESHOLD, duration=150.0))
 
 
 if __name__ == "__main__":

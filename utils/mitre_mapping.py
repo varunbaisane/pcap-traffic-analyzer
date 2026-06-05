@@ -13,6 +13,11 @@ MITRE_MAPPING = {
         "tactic": "Discovery",
         "technique_id": "T1046",
         "technique_name": "Network Service Scanning"
+    },
+    "Brute Force Attempt": {
+        "tactic": "Credential Access",
+        "technique_id": "T1110",
+        "technique_name": "Brute Force"
     }
 }
 

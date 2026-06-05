@@ -10,7 +10,7 @@
 ![License](https://img.shields.io/badge/LICENSE-Apache%202.0-yellow)
 
 
-A Python-based network forensics tool that analyses PCAP files and detects suspicious network activity including port scanning, DNS anomalies, and ICMP flooding.
+A Python-based network forensics tool that analyses PCAP files and detects suspicious network activity including port scanning, DNS anomalies, ICMP flooding, and brute force attempts.
 
 The tool produces **structured SOC-style alerts** in JSON format with optional **LLM-powered enrichment** via Google Gemini.
 
@@ -29,6 +29,7 @@ Demonstrates practical network security and detection skills by inspecting packe
 | **Port Scan Detection** | Identifies hosts scanning multiple ports on a target |
 | **DNS Anomaly Detection** | Flags excessive DNS queries that may indicate tunneling or malware C2 |
 | **ICMP Abuse Detection** | Detects abnormal ICMP traffic associated with reconnaissance or DoS |
+| **Brute Force Detection** | Detects repeated TCP SYN attempts to authentication service ports (SSH, FTP, Telnet, RDP) using a 60-second sliding window |
 
 ---
 
@@ -95,7 +96,7 @@ PCAP files are not committed to the repository. Generate the full validation dat
 python samples/generate_samples.py
 ```
 
-This produces 9 deterministic synthetic PCAPs covering boundary conditions, high-volume detection, mixed attacks, and benign traffic. See [`samples/README.md`](samples/README.md) for the full inventory.
+This produces 14 deterministic synthetic PCAPs covering boundary conditions, high-volume detection, mixed attacks, benign traffic, and brute force scenarios. See [`samples/README.md`](samples/README.md) for the full inventory.
 
 To generate only the basic quick-start sample used in the examples above:
 

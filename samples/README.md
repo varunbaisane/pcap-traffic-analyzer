@@ -19,6 +19,7 @@ All files are produced deterministically by `generate_samples.py`. Repeated runs
 | Port Scan | Unique destination ports per source IP | ≥ 20 |
 | DNS Anomaly | DNS packets per source IP | ≥ 50 |
 | ICMP Flood | ICMP packets per source IP | ≥ 100 |
+| Brute Force | TCP SYN packets per (source IP, destination IP, port) in 60s window | ≥ 10 |
 
 ---
 
@@ -35,6 +36,11 @@ All files are produced deterministically by `generate_samples.py`. Repeated runs
 | `mixed_attack.pcap` | 3 sources, each triggering a different detector | 3 alerts (one per type) | Mixed attack — validates independent per-detector operation |
 | `benign_traffic.pcap` | 3 sources, all below every threshold | 0 alerts | Benign validation — confirms no false positives at sub-threshold volumes |
 | `below_threshold_mix.pcap` | Port Scan: 19 ports · DNS: 49 queries · ICMP: 99 packets | 0 alerts | Boundary negative — one step below every threshold simultaneously |
+| `bruteforce_threshold.pcap` | 10 SYN to SSH (port 22) over 30s | 1 × Brute Force Attempt | Detection validation — at threshold within window |
+| `bruteforce_high_volume.pcap` | 25 SYN to SSH (port 22) over 30s | 1 × Brute Force Attempt | Detection validation — clearly above threshold |
+| `bruteforce_below_threshold.pcap` | 9 SYN to SSH (port 22) over 30s | 0 alerts | Boundary negative — one below threshold |
+| `bruteforce_cross_service.pcap` | 5 SYN to SSH + 5 SYN to FTP, same src/dst, same time window | 0 alerts | Per-port isolation — counts are not combined across ports |
+| `bruteforce_outside_window.pcap` | 10 SYN to SSH over 150s (exceeds 60s window) | 0 alerts | Window negative — max 4 SYN in any 60s window |
 
 ---
 
@@ -89,6 +95,27 @@ Three source IPs, each producing traffic exactly one unit below its detector's t
 Expected result: zero alerts. Validates that every threshold boundary is exclusive on the lower side,
 confirming no off-by-one errors in any detector.
 
+### `bruteforce_threshold.pcap`
+One source IP sends 10 TCP SYN packets to SSH (port 22) on a single target over 30 seconds.
+Validates that the brute force detector fires at the minimum qualifying count within the 60-second window.
+
+### `bruteforce_high_volume.pcap`
+One source IP sends 25 TCP SYN packets to SSH (port 22) over 30 seconds.
+Confirms reliable detection well above the threshold.
+
+### `bruteforce_below_threshold.pcap`
+One source IP sends 9 TCP SYN packets to SSH (port 22) over 30 seconds.
+Expected result: zero alerts. Validates the boundary is exclusive below the threshold.
+
+### `bruteforce_cross_service.pcap`
+One source IP sends 5 SYN packets to SSH (port 22) and 5 SYN packets to FTP (port 21), same destination, overlapping time window.
+Expected result: zero alerts. Validates that attempt counts are tracked per port and not combined across services.
+
+### `bruteforce_outside_window.pcap`
+One source IP sends 10 TCP SYN packets to SSH (port 22) spread over 150 seconds.
+The maximum count in any 60-second sliding window is 4.
+Expected result: zero alerts. Validates the 60-second window boundary.
+
 ---
 
 ## Known Limitations
@@ -96,3 +123,4 @@ confirming no off-by-one errors in any detector.
 - The port scan detector is count-based, not time-based. `port_scan_boundary.pcap` and `port_scan_high_volume.pcap` are functionally equivalent in terms of detection; they differ only in metric values reported.
 - The DNS detector counts all DNS-layer packets, regardless of query type or domain. `dns_anomaly` samples reflect total packet volume, not unique domains queried.
 - The ICMP detector counts all ICMP packets regardless of type (echo, echo reply, unreachable, etc.).
+- The brute force detector uses a sliding window and counts only pure TCP SYN packets (no ACK). It does not detect distributed brute force (multiple source IPs) or attacks on non-standard ports.
