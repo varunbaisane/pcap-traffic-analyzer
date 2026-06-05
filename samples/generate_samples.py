@@ -1,7 +1,7 @@
 """Generate synthetic PCAP samples for detector validation."""
 
 import pathlib
-from scapy.all import IP, TCP, UDP, ICMP, DNS, DNSQR, wrpcap
+from scapy.all import IP, TCP, UDP, ICMP, DNS, DNSQR, Packet, wrpcap
 
 SAMPLES_DIR = pathlib.Path(__file__).parent
 
@@ -19,23 +19,39 @@ PORT_SCAN_THRESHOLD = 20
 DNS_THRESHOLD       = 50
 ICMP_THRESHOLD      = 100
 
-
-def syn_packets(src, dst, port_count, port_start=1024):
-    return [
-        IP(src=src, dst=dst) / TCP(dport=port_start + i, flags="S")
-        for i in range(port_count)
-    ]
+BASE_TIME = 1_700_000_000.0
 
 
-def dns_packets(src, dst, count):
-    return [
-        IP(src=src, dst=dst) / UDP(dport=53) / DNS(qd=DNSQR(qname="example.com"))
-        for _ in range(count)
-    ]
+def timed_packets(packet_factory, count: int, duration: float, base: float = BASE_TIME) -> list[Packet]:
+
+    interval = 0.0 if (count <= 1 or duration == 0) else duration / (count - 1)
+    pkts = []
+    for i in range(count):
+        pkt = packet_factory(i)
+        pkt.time = base + i * interval
+        pkts.append(pkt)
+    return pkts
 
 
-def icmp_packets(src, dst, count):
-    return [IP(src=src, dst=dst) / ICMP() for _ in range(count)]
+def syn_packets(src, dst, port_count, duration=10.0, port_start=1024, base=BASE_TIME):
+    return timed_packets(
+        lambda i: IP(src=src, dst=dst) / TCP(dport=port_start + i, flags="S"),
+        port_count, duration, base,
+    )
+
+
+def dns_packets(src, dst, count, duration=60.0, base=BASE_TIME):
+    return timed_packets(
+        lambda i: IP(src=src, dst=dst) / UDP(dport=53) / DNS(qd=DNSQR(qname="example.com")),
+        count, duration, base,
+    )
+
+
+def icmp_packets(src, dst, count, duration=30.0, base=BASE_TIME):
+    return timed_packets(
+        lambda i: IP(src=src, dst=dst) / ICMP(),
+        count, duration, base,
+    )
 
 
 def save(filename, packets):
@@ -64,8 +80,8 @@ def main():
 
     save("mixed_attack.pcap",
          syn_packets(SCAN_SRC, SCAN_DST, 50) +
-         dns_packets(DNS_SRC, DNS_DST, 150) +
-         icmp_packets(ICMP_SRC, ICMP_DST, 300))
+         dns_packets(DNS_SRC, DNS_DST, 150, base=BASE_TIME + 300) +
+         icmp_packets(ICMP_SRC, ICMP_DST, 300, base=BASE_TIME + 600))
 
     save("benign_traffic.pcap",
          syn_packets(BENIGN_SRC_A, SCAN_DST, 10) +
