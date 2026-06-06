@@ -20,6 +20,7 @@ All files are produced deterministically by `generate_samples.py`. Repeated runs
 | DNS Anomaly | DNS packets per source IP | ≥ 50 |
 | ICMP Flood | ICMP packets per source IP | ≥ 100 |
 | Brute Force | TCP SYN packets per (source IP, destination IP, port) in 60s window | ≥ 10 |
+| HTTP Flood | HTTP requests per (source IP, destination IP) in 30s window | ≥ 50 |
 
 ---
 
@@ -41,6 +42,12 @@ All files are produced deterministically by `generate_samples.py`. Repeated runs
 | `bruteforce_below_threshold.pcap` | 9 SYN to SSH (port 22) over 30s | 0 alerts | Boundary negative — one below threshold |
 | `bruteforce_cross_service.pcap` | 5 SYN to SSH + 5 SYN to FTP, same src/dst, same time window | 0 alerts | Per-port isolation — counts are not combined across ports |
 | `bruteforce_outside_window.pcap` | 10 SYN to SSH over 150s (exceeds 60s window) | 0 alerts | Window negative — max 4 SYN in any 60s window |
+| `http_flood_threshold.pcap` | 50 GET requests to port 80 over 30s | 1 × HTTP Flood | Detection validation — at threshold within window |
+| `http_flood_high_volume.pcap` | 100 GET requests to port 80 over 10s | 1 × HTTP Flood | Detection validation — clearly above threshold |
+| `http_flood_below_threshold.pcap` | 49 GET requests to port 80 over 30s | 0 alerts | Boundary negative — one below threshold |
+| `http_flood_cross_host.pcap` | 25 requests to Host A + 25 requests to Host B | 0 alerts | Per-host isolation — counts are not combined across destinations |
+| `http_flood_cross_port.pcap` | 25 requests to port 80 + 25 requests to port 8080, same src/dst | 1 × HTTP Flood | Cross-port aggregation — counts are combined across ports to the same host |
+| `http_flood_outside_window.pcap` | 50 GET requests to port 80 over 120s (exceeds 30s window) | 0 alerts | Window negative — max requests in any 30s window is below 50 |
 
 ---
 
@@ -116,6 +123,30 @@ One source IP sends 10 TCP SYN packets to SSH (port 22) spread over 150 seconds.
 The maximum count in any 60-second sliding window is 4.
 Expected result: zero alerts. Validates the 60-second window boundary.
 
+### `http_flood_threshold.pcap`
+One source IP sends 50 HTTP GET requests to port 80 on a single target over 30 seconds.
+Validates that the HTTP flood detector fires at the minimum qualifying count within the 30-second window.
+
+### `http_flood_high_volume.pcap`
+One source IP sends 100 HTTP GET requests to port 80 over 10 seconds.
+Confirms reliable detection well above the threshold.
+
+### `http_flood_below_threshold.pcap`
+One source IP sends 49 HTTP GET requests to port 80 over 30 seconds.
+Expected result: zero alerts. Validates the boundary is exclusive below the threshold.
+
+### `http_flood_cross_host.pcap`
+One source IP sends 25 HTTP GET requests to Host A and 25 to Host B.
+Expected result: zero alerts. Validates that attempt counts are tracked per destination host.
+
+### `http_flood_cross_port.pcap`
+One source IP sends 25 HTTP GET requests to port 80 and 25 to port 8080 on the same destination host.
+Expected result: 1 HTTP Flood alert. Validates that attempt counts are aggregated across ports for the same host.
+
+### `http_flood_outside_window.pcap`
+One source IP sends 50 HTTP GET requests to port 80 spread over 120 seconds.
+Expected result: zero alerts. Validates the 30-second window boundary.
+
 ---
 
 ## Known Limitations
@@ -124,3 +155,4 @@ Expected result: zero alerts. Validates the 60-second window boundary.
 - The DNS detector counts all DNS-layer packets, regardless of query type or domain. `dns_anomaly` samples reflect total packet volume, not unique domains queried.
 - The ICMP detector counts all ICMP packets regardless of type (echo, echo reply, unreachable, etc.).
 - The brute force detector uses a sliding window and counts only pure TCP SYN packets (no ACK). It does not detect distributed brute force (multiple source IPs) or attacks on non-standard ports.
+- The HTTP flood detector parses application-layer HTTP headers. HTTP/2 and HTTPS are not detected.

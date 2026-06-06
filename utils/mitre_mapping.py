@@ -18,6 +18,11 @@ MITRE_MAPPING = {
         "tactic": "Credential Access",
         "technique_id": "T1110",
         "technique_name": "Brute Force"
+    },
+    "HTTP Flood": {
+        "tactic": "Impact",
+        "technique_id": "T1498",
+        "technique_name": "Network Denial of Service"
     }
 }
 

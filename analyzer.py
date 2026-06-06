@@ -14,6 +14,7 @@ from detectors.portscan import detect_port_scan
 from detectors.dns import detect_dns_anomaly
 from detectors.icmp import detect_icmp_abuse
 from detectors.bruteforce import detect_brute_force
+from detectors.http_flood import detect_http_flood
 from utils.console_output import print_alerts
 from utils.mitre_mapping import enrich_with_mitre
 
@@ -97,6 +98,7 @@ def run_detection(packets) -> list[dict]:
     alerts.extend(_enrich_with_metadata(detect_dns_anomaly(packets), "DNS"))
     alerts.extend(_enrich_with_metadata(detect_icmp_abuse(packets), "ICMP"))
     alerts.extend(_enrich_with_metadata(detect_brute_force(packets), "BF"))
+    alerts.extend(_enrich_with_metadata(detect_http_flood(packets), "HF"))
     return alerts
 
 

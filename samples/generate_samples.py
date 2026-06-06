@@ -2,6 +2,7 @@
 
 import pathlib
 from scapy.all import IP, TCP, UDP, ICMP, DNS, DNSQR, Packet, wrpcap
+from scapy.layers.http import HTTPRequest
 
 SAMPLES_DIR = pathlib.Path(__file__).parent
 
@@ -19,9 +20,14 @@ PORT_SCAN_THRESHOLD  = 20
 DNS_THRESHOLD        = 50
 ICMP_THRESHOLD       = 100
 BRUTE_FORCE_THRESHOLD = 10
+HTTP_FLOOD_THRESHOLD = 50
 
 BF_SRC = "10.0.1.10"
 BF_DST = "10.0.1.20"
+
+HF_SRC = "10.0.2.10"
+HF_DST = "10.0.2.20"
+HF_DST_B = "10.0.2.30"
 
 BASE_TIME = 1_700_000_000.0
 
@@ -61,6 +67,13 @@ def icmp_packets(src, dst, count, duration=30.0, base=BASE_TIME):
 def bf_syn_packets(src, dst, port, count, duration=30.0, base=BASE_TIME):
     return timed_packets(
         lambda i: IP(src=src, dst=dst) / TCP(dport=port, flags="S"),
+        count, duration, base,
+    )
+
+
+def http_packets(src, dst, port, method, count, duration=30.0, base=BASE_TIME):
+    return timed_packets(
+        lambda i: IP(src=src, dst=dst) / TCP(dport=port, flags="PA", sport=10000+i) / HTTPRequest(Method=method, Path=b"/", Http_Version=b"HTTP/1.1", Host=dst.encode()),
         count, duration, base,
     )
 
@@ -119,6 +132,26 @@ def main():
 
     save("bruteforce_outside_window.pcap",
          bf_syn_packets(BF_SRC, BF_DST, 22, BRUTE_FORCE_THRESHOLD, duration=150.0))
+
+    save("http_flood_threshold.pcap",
+         http_packets(HF_SRC, HF_DST, 80, b"GET", HTTP_FLOOD_THRESHOLD))
+
+    save("http_flood_high_volume.pcap",
+         http_packets(HF_SRC, HF_DST, 80, b"GET", 100, duration=10.0))
+
+    save("http_flood_below_threshold.pcap",
+         http_packets(HF_SRC, HF_DST, 80, b"GET", HTTP_FLOOD_THRESHOLD - 1))
+
+    save("http_flood_cross_host.pcap",
+         http_packets(HF_SRC, HF_DST, 80, b"GET", 25) +
+         http_packets(HF_SRC, HF_DST_B, 80, b"GET", 25))
+
+    save("http_flood_cross_port.pcap",
+         http_packets(HF_SRC, HF_DST, 80, b"GET", 25) +
+         http_packets(HF_SRC, HF_DST, 8080, b"GET", 25))
+
+    save("http_flood_outside_window.pcap",
+         http_packets(HF_SRC, HF_DST, 80, b"GET", HTTP_FLOOD_THRESHOLD, duration=120.0))
 
 
 if __name__ == "__main__":
